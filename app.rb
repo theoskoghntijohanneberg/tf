@@ -9,7 +9,6 @@ enable :sessions
 
 
 get('/') do
-    db = connect_db('db/hej.db')
    slim(:start) 
 end
 
@@ -17,4 +16,29 @@ get('/buildarmy') do
     db = connect_db('db/hej.db')
     @all_factions = db.execute("SELECT * FROM faction")
     slim(:army)
+end
+
+
+post('/buildarmy') do
+    db = connect_db('db/hej.db')
+    faction = params[:faction]
+    imperium = params[:imperium]
+    chaos = params[:chaos]
+    necrons = params[:necrons]
+
+    if faction == imperium
+        db.execute('SELECT * faction WHERE faction_id = 1')
+    elsif faction == chaos
+        db.execute('SELECT * faction WHERE faction_id = 2')
+    elsif faction == necrons
+        db.execute('SELECT * faction WHERE faction_id = 3')
+    end
+
+    redirect('/types')
+end
+
+get('/types') do
+    db = connect_db('db/hej.db')
+    @type_list = db.execute('SELECT * FROM type')
+    slim(:types)
 end

@@ -1,5 +1,14 @@
 h1 Create your army!
+hr/
 
 h2 Faction list
 - @all_factions.each do |faction|
     h1 = faction["faction_name"]
+hr/
+
+form action="/buildarmy"  method="post"
+    select name="faction"
+        option value="imperium" Imperium
+        option value="chaos"    Chaos
+        option value="necrons"  Necrons
+    input type="submit" value="Continue"
