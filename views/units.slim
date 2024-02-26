@@ -1,0 +1,7 @@
+h1 Unit List
+hr/
+
+- @unit_list.each do |unit|
+    h1 #{unit['unit_name']} #{unit['cost']} Points
+    form action="/units/#{unit['unit_id']}" method="post"
+        input type="submit" value="+"

@@ -42,3 +42,18 @@ get('/types') do
     @type_list = db.execute('SELECT * FROM type')
     slim(:types)
 end
+
+get('/units/:id') do
+    db = connect_db('db/hej.db')
+    button = params[:id]
+    @unit_list = db.execute('SELECT * FROM unit WHERE type_id = ?',button)
+    slim(:units)
+end
+
+post('/units/:id_unit') do
+    db = connect_db('db/hej.db')
+    button = params[:id_unit]
+    @army = db.execute('INSERT INTO army (unit_id) VALUES (?)',button) #Lägga till user_id
+    redirect('/units/:id')
+end
+
