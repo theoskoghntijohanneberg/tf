@@ -9,8 +9,61 @@ enable :sessions
 
 
 get('/') do
-   slim(:start) 
+    slim(:login)
 end
+
+get('/error') do
+    slim(:error)
+end
+
+get('/showregister') do
+    slim(:register)
+end
+
+post('/login') do
+    username = params[:username]
+    password = params[:password]
+  
+    db = connect_db('db/hej.db')
+    db.results_as_hash = true
+
+    if password.empty? || username.empty?
+        redirect('/error')
+    end
+  
+    result = db.execute("SELECT * FROM user WHERE username = ?",username).first
+    pwdigest = result["password"]
+    id = result["id"]
+    role = result["role"]
+
+  
+    if BCrypt::Password.new(pwdigest) == password
+      session[:id] = id
+      session[:role] = role
+      redirect('/buildarmy')
+    else
+      redirect('/error')
+    end
+  end
+
+  post('/users/new') do
+    username = params[:username]
+    password = params[:password]
+    password_confirm = params[:password_confirm]
+
+    if username.empty? || password.empty? || password_confirm.empty?
+        redirect('/error')
+    end
+  
+    if (password == password_confirm)
+      password_digest = BCrypt::Password.create(password)
+      db = connect_db('db/hej.db')
+      db.execute("INSERT INTO user (username,password,role) VALUES (?,?,0)",username,password_digest) #Lägga till värde på role
+      redirect('/')
+    else
+      "Wrong Password"
+    end
+  end
 
 get('/buildarmy') do
     db = connect_db('db/hej.db')
@@ -37,9 +90,6 @@ post('/buildarmy') do
         db.execute('SELECT * FROM faction WHERE faction_id = 3')
         session[:faction] = 3
     end
-
-    
-
     redirect('/types')
 end
 
@@ -60,16 +110,15 @@ get('/units/:id') do
     elsif session[:faction] == 3
         @unit_list = db.execute('SELECT * FROM unit WHERE faction_id = 3 AND type_id = ?',button)
     end
-    p @unit_list
-    p session[:faction]
     # @unit_list = db.execute('SELECT * FROM unit WHERE type_id = ?',button,)
     slim(:units)
 end
 
-post('/units/:id_unit') do
+post('/units/:id') do
     db = connect_db('db/hej.db')
-    button = params[:id_unit]
-    @army = db.execute('INSERT INTO army (unit_id, user_id, amount) VALUES (?, 0, 0)',button) #Lägga till user_id
-    redirect('/units/:id')
+    button = params[:id]
+    @unit_list = db.execute('INSERT INTO army (unit_id, user_id, amount) VALUES (?, 0, 0)',button) #Lägga till user_id
+    
+    redirect('/units/' + params[:id])
 end
 

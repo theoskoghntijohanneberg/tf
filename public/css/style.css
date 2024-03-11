@@ -15,3 +15,11 @@ a {
   text-decoration: none;
   color: antiquewhite;
 }
+
+#register_link {
+  display: flex;
+  justify-content: center;
+  text-decoration: none;
+  font-style: italic;
+  color: rgb(19, 3, 86);
+}
