@@ -3,6 +3,9 @@ hr/
 
 - @type_list.each do |type|
     h1 = type["type_name"]
-    form action="/units/#{type['type_id']}" method="get"
+    form action="/protected/units/#{type['type_id']}" method="get"
         input type="submit" value="+"
 
+
+- @list.each do |element|
+    h2 = element
