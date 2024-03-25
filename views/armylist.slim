@@ -1,0 +1,12 @@
+h1 Your army list! Current army size: #{session[:amount_that_they_cost]}
+hr
+
+- @list.each do |element|
+    h2 = element
+    form method="POST" action="/protected/armylist/#{element['unit_id']}/delete"
+        input type="submit" value="Delete"
+
+
+/ form method="POST" action="/protected/armylist"
+/     input type="text" name="army_name" placeholder="Army name"
+/     input type="submit" value="Save army"

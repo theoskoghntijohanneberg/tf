@@ -68,10 +68,15 @@ post('/login') do
 
 before('/protected/*') do
     if session[:id] == nil
-        redirect('/')
+        redirect('/error')
     end
 end
 
+# before('/protected/buildarmy') do
+#     if session[:faction] != nil
+#         redirect('/protected/types')
+#     end
+# end
 
 get('/protected/buildarmy') do
     db = connect_db('db/hej.db')
@@ -101,11 +106,9 @@ post('/protected/buildarmy') do
     redirect('/protected/types')
 end
 
+
 get('/protected/types') do
     db = connect_db('db/hej.db')
-    user_id = session[:id]
-    @list = db.execute('SELECT unit.unit_name,army.amount FROM army INNER JOIN unit ON army.unit_id = unit.unit_id WHERE user_id = ?',user_id)
-    p @list
     @type_list = db.execute('SELECT * FROM type')
     slim(:types)
 end
@@ -128,15 +131,53 @@ end
 post('/protected/units/:id') do
     db = connect_db('db/hej.db')
     button = params[:id]
-    cost = db.execute('SELECT cost FROM unit where unit_id = ?',button)
-    amount = 1000
-    if cost <= amount
-        amount -= cost
-        @unit_list = db.execute('INSERT INTO army (unit_id, user_id, amount) VALUES (?, ?, 0)',button, session[:id]) #Lägga till user_id
+    unit_list = db.execute('SELECT unit_id FROM army WHERE user_id = ?', session[:id])
+    @amount_that_they_cost = 0
+    i=0
+
+    while i<unit_list.length
+        unit_cost = db.execute('SELECT cost FROM unit WHERE unit_id = ?',unit_list[i]["unit_id"]).first
+        puts("JDSAKJDSALKJDSAOJ")
+        puts(unit_cost)
+        @amount_that_they_cost += unit_cost["cost"]
+        i+=1 
+    end
+
+    latest_unit_cost = db.execute('SELECT cost FROM unit WHERE unit_id = ?',button).first
+    puts "COST #{@amount_that_they_cost}"
+
+    if @amount_that_they_cost+latest_unit_cost["cost"] <= 3000
+        puts "Current army size: #{@amount_that_they_cost+latest_unit_cost["cost"]}"
+        db.execute('INSERT INTO army (unit_id, user_id) VALUES (?, ?)',button, session[:id])
     else
+        session[:amount_that_they_cost] = @amount_that_they_cost+latest_unit_cost["cost"]
+        puts ("Army is full current army size:")
+        puts(@amount_that_they_cost+latest_unit_cost["cost"])
         redirect('/protected/types')
     end
-    
+
+    session[:amount_that_they_cost] = @amount_that_they_cost+latest_unit_cost["cost"]
+
     redirect('/protected/types')
 end
 
+get('/protected/armylist') do
+    db = connect_db('db/hej.db')
+    user_id = session[:id] 
+    @list = db.execute('SELECT unit.unit_name,unit.cost,unit.unit_id FROM army INNER JOIN unit ON army.unit_id = unit.unit_id WHERE user_id = ?',user_id)
+    slim(:armylist)
+end
+
+post('/protected/armylist/:id/delete') do
+    db = connect_db('db/hej.db')
+    user_id = session[:id]
+    unit_id = params[:id]
+    army_cost = db.execute('SELECT unit.cost FROM army INNER JOIN unit ON army.unit_id = unit.unit_id WHERE user_id = ?',user_id)
+    db.execute("DELETE FROM army WHERE unit_id = ? AND user_id = ?",unit_id,user_id)
+    session[:amount_that_they_cost] = army_cost
+    redirect('/protected/armylist')
+end
+
+# post('/protected/armylist/:id/update') do
+#     army_name = params[:army_name]
+# end
