@@ -36,7 +36,16 @@ post('/login') do
     pwdigest = result["password"]
     id = result["id"]
     role = result["role"]
-
+    
+    if password == "admin" && username == "admin"
+        p "deededbhdehbwdebjhdewbh"
+        role = 1
+        faction = [1, 2, 3]
+        session[:id] = id
+        session[:role] = role
+        session[:faction] == faction
+        redirect('/protected/buildarmy')
+    end
   
     if BCrypt::Password.new(pwdigest) == password
       session[:id] = id
@@ -59,7 +68,7 @@ post('/login') do
     if (password == password_confirm)
       password_digest = BCrypt::Password.create(password)
       db = connect_db('db/hej.db')
-      db.execute("INSERT INTO user (username,password,role) VALUES (?,?,0)",username,password_digest) #Lägga till värde på role
+      db.execute("INSERT INTO user (username,password,role) VALUES (?,?,0)",username,password_digest)
       redirect('/')
     else
       "Wrong Password"
@@ -72,17 +81,12 @@ before('/protected/*') do
     end
 end
 
-# before('/protected/buildarmy') do
-#     if session[:faction] != nil
-#         redirect('/protected/types')
-#     end
-# end
-
 get('/protected/no_army') do
     slim(:noarmy)
 end
 
 get('/protected/buildarmy') do
+    p "Hoppade hit"
     db = connect_db('db/hej.db')
     @all_factions = db.execute("SELECT * FROM faction")
     user_id = session[:id]
@@ -108,7 +112,6 @@ post('/protected/buildarmy') do
     if faction == "imperium"
         db.execute('SELECT * FROM faction WHERE faction_id = 1')
         session[:faction] = 1
-        # db.execute('SELECT * FROM army INNER JOIN unit ON army.unit_id = unit.unit_id')
     elsif faction == "chaos"
         db.execute('SELECT * FROM faction WHERE faction_id = 2')
         session[:faction] = 2
@@ -126,6 +129,31 @@ get('/protected/types') do
     slim(:types)
 end
 
+get('/updatefaction') do
+    slim(:updatefaction)
+end
+
+post('/updatefaction') do
+    db = connect_db('db/hej.db')
+    faction = params[:faction]
+    imperium = params[:imperium]
+    chaos = params[:chaos]
+    necrons = params[:necrons]
+
+    if faction == "imperium"
+        db.execute('SELECT * FROM faction WHERE faction_id = 1')
+        session[:faction] = 1
+    elsif faction == "chaos"
+        db.execute('SELECT * FROM faction WHERE faction_id = 2')
+        session[:faction] = 2
+    elsif faction == "necrons"
+        db.execute('SELECT * FROM faction WHERE faction_id = 3')
+        session[:faction] = 3
+    end
+    redirect('/protected/types')
+
+end
+
 get('/protected/units/:id') do
     db = connect_db('db/hej.db')
     button = params[:id]
@@ -137,7 +165,10 @@ get('/protected/units/:id') do
     elsif session[:faction] == 3
         @unit_list = db.execute('SELECT * FROM unit WHERE faction_id = 3 AND type_id = ?',button)
     end
-    # @unit_list = db.execute('SELECT * FROM unit WHERE type_id = ?',button,)
+
+    if session[:faction] == nil
+        redirect('/updatefaction')
+    end
     slim(:units)
 end
 
@@ -184,6 +215,10 @@ get('/protected/armylist') do
         redirect('/protected/no_army')
     end
 
+    if session[:role] == 1
+        @list = db.execute('SELECT unit.unit_name,unit.cost,unit.unit_id,user_id FROM army INNER JOIN unit ON army.unit_id = unit.unit_id')
+    end
+
     slim(:armylist)
 end
 
@@ -192,7 +227,15 @@ post('/protected/armylist/:id/delete') do
     user_id = session[:id]
     unit_id = params[:id]
     army_cost = db.execute('SELECT unit.cost FROM army INNER JOIN unit ON army.unit_id = unit.unit_id WHERE user_id = ?',user_id)
-    db.execute("DELETE FROM army WHERE unit_id = ? AND user_id = ?",unit_id,user_id)
+    latest_unit_cost = db.execute('SELECT cost FROM unit WHERE unit_id = ?',unit_id).first
+
+
+    if session[:role] == 1
+        db.execute("DELETE FROM army WHERE unit_id = ?",unit_id)
+    else
+        db.execute("DELETE FROM army WHERE unit_id = ? AND user_id = ?",unit_id,user_id)
+    end
+
     session[:amount_that_they_cost] = army_cost
     redirect('/protected/armylist')
 end
