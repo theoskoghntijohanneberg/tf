@@ -78,9 +78,22 @@ end
 #     end
 # end
 
+get('/protected/no_army') do
+    slim(:noarmy)
+end
+
 get('/protected/buildarmy') do
     db = connect_db('db/hej.db')
     @all_factions = db.execute("SELECT * FROM faction")
+    user_id = session[:id]
+    army_user = db.execute("SELECT user_id FROM army WHERE user_id = ?", user_id)
+
+    if army_user.empty?
+        slim(:army)
+    else
+        redirect('/protected/types')
+    end
+
     slim(:army)
 end
 
@@ -165,6 +178,12 @@ get('/protected/armylist') do
     db = connect_db('db/hej.db')
     user_id = session[:id] 
     @list = db.execute('SELECT unit.unit_name,unit.cost,unit.unit_id FROM army INNER JOIN unit ON army.unit_id = unit.unit_id WHERE user_id = ?',user_id)
+    army_user = db.execute("SELECT user_id FROM army WHERE user_id = ?", user_id)
+
+    if army_user.empty?
+        redirect('/protected/no_army')
+    end
+
     slim(:armylist)
 end
 
@@ -178,6 +197,37 @@ post('/protected/armylist/:id/delete') do
     redirect('/protected/armylist')
 end
 
-# post('/protected/armylist/:id/update') do
-#     army_name = params[:army_name]
-# end
+
+post('/protected/armylist/:id/update') do
+    db = connect_db('db/hej.db')
+    user_id = session[:id]
+    unit_id = params[:id]
+    imperium = params[:imperium]
+    chaos = params[:chaos]
+    necrons = params[:necrons]
+    faction = params[:faction]
+
+    if faction == "imperium"
+        db.execute('UPDATE unit SET faction_id = 1 WHERE unit_id = ?', unit_id)
+    elsif faction == "chaos"
+        db.execute('UPDATE unit SET faction_id = 2 WHERE unit_id = ?', unit_id)
+    elsif faction == "necrons"
+        db.execute('UPDATE unit SET faction_id = 3 WHERE unit_id = ?', unit_id)
+    end
+
+    redirect('/protected/armylist')
+end
+
+post('/protected/armylist/:id/name') do
+    db = connect_db('db/hej.db')
+    army_name = params[:army_name]
+    user_id = session[:id]
+
+    db.execute("UPDATE army SET army_name = ? WHERE user_id = ?",army_name,user_id)
+
+    session[:army_name] = army_name
+    redirect('/protected/armylist')
+end
+
+
+

@@ -1,3 +1,4 @@
+
 nav {
     font-family: Arial, Helvetica, sans-serif;
     text-transform: uppercase;
@@ -22,4 +23,10 @@ a {
   text-decoration: none;
   font-style: italic;
   color: rgb(19, 3, 86);
+}
+
+#redirect_army_if_no_army {
+  display: flex;
+  font-style: italic;
+  color: rgb(235, 15, 15);
 }
