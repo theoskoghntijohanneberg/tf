@@ -12,6 +12,12 @@ nav {
     align-items:center;
   }
 
+#angry_man {
+  color: rgb(50, 32, 142);
+  position: absolute;
+  right: 200px;
+}
+
 a {
   text-decoration: none;
   color: antiquewhite;
