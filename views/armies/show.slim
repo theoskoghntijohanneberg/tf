@@ -16,5 +16,12 @@ hr
             option value="chaos"    Chaos
             option value="necrons"  Necrons
         input type="submit" value="Update"
+    
+    - if session[:role] == 1 then
+    form method="POST" action="/protected/army/show/#{session[:id]}/name"
+        / input type="hidden" name="army_id" value="#{@list['army_id'].to_i}"
+        input type="text" name="army_name" placeholder="Name your army"
+        input type="submit" value="Update army name"
+        
 
 

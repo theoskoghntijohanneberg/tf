@@ -131,7 +131,7 @@ post('/protected/new') do
     necrons = params[:necrons]
 
     if faction == "imperium"
-        select()
+        db.execute('SELECT * FROM faction WHERE faction_id = 1')
         session[:faction] = 1
     elsif faction == "chaos"
         db.execute('SELECT * FROM faction WHERE faction_id = 2')
@@ -177,7 +177,6 @@ end
 get('/protected/army/show') do
     db = connect_db('db/hej.db')
     user_id = session[:id] 
-    @list = db.execute('SELECT unit.unit_name,unit.cost,unit.unit_id FROM army INNER JOIN unit ON army.unit_id = unit.unit_id WHERE user_id = ?',user_id)
     army_user = db.execute("SELECT user_id FROM army WHERE user_id = ?", user_id)
 
     if army_user.empty?
@@ -185,7 +184,9 @@ get('/protected/army/show') do
     end
 
     if session[:role] == 1
-        @list = db.execute('SELECT unit.unit_name,unit.cost,unit.unit_id,user_id FROM army INNER JOIN unit ON army.unit_id = unit.unit_id')
+        @list = db.execute('SELECT unit.unit_name,unit.cost,unit.unit_id,user_id,army.army_name,army.army_id FROM army INNER JOIN unit ON army.unit_id = unit.unit_id')
+    else
+        @list = db.execute('SELECT unit.unit_name,unit.cost,unit.unit_id,user_id,army.army_name,army.army_id FROM army INNER JOIN unit ON army.unit_id = unit.unit_id WHERE user_id = ?',user_id)
     end
 
     slim(:"armies/show")
@@ -234,8 +235,14 @@ post('/protected/army/show/:id/name') do
     db = connect_db('db/hej.db')
     army_name = params[:army_name]
     user_id = session[:id]
+    hidden_id = params[:army_id]
 
     db.execute("UPDATE army SET army_name = ? WHERE user_id = ?",army_name,user_id)
+
+    if session[:role] == 1
+        db.execute("UPDATE army SET army_name = ?",army_name)
+        puts "Här: #{session[:id]}"
+    end
 
     session[:army_name] = army_name
     redirect('/protected/army/show')

@@ -72,3 +72,4 @@ def while_funktion_cost(button)
 
     
 end
+
