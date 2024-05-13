@@ -73,3 +73,13 @@ def while_funktion_cost(button)
     
 end
 
+def update_unit_faction(faction, unit_id)
+    db = connect_db('db/hej.db')
+    if faction == "imperium"
+        db.execute('UPDATE unit SET faction_id = 1 WHERE unit_id = ?', unit_id)
+    elsif faction == "chaos"
+        db.execute('UPDATE unit SET faction_id = 2 WHERE unit_id = ?', unit_id)
+    elsif faction == "necrons"
+        db.execute('UPDATE unit SET faction_id = 3 WHERE unit_id = ?', unit_id)
+    end
+end

@@ -212,21 +212,11 @@ end
 
 
 post('/protected/army/show/:id/update') do
-    db = connect_db('db/hej.db')
     user_id = session[:id]
     unit_id = params[:id]
-    imperium = params[:imperium]
-    chaos = params[:chaos]
-    necrons = params[:necrons]
     faction = params[:faction]
 
-    if faction == "imperium"
-        db.execute('UPDATE unit SET faction_id = 1 WHERE unit_id = ?', unit_id)
-    elsif faction == "chaos"
-        db.execute('UPDATE unit SET faction_id = 2 WHERE unit_id = ?', unit_id)
-    elsif faction == "necrons"
-        db.execute('UPDATE unit SET faction_id = 3 WHERE unit_id = ?', unit_id)
-    end
+    update_unit_faction(faction, unit_id)
 
     redirect('/protected/army/show')
 end
@@ -241,7 +231,6 @@ post('/protected/army/show/:id/name') do
 
     if session[:role] == 1
         db.execute("UPDATE army SET army_name = ?",army_name)
-        puts "Här: #{session[:id]}"
     end
 
     session[:army_name] = army_name
